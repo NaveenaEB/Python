@@ -12,3 +12,15 @@ def create_employee_salary(db: Session, salary: salary_schema.SalaryCreate):
             detail=f"Employee with ID {salary.employee_id} not found"
         )
     return salary_repository.create_salary(db, salary)
+
+def get_all_salaries(db: Session, skip: int = 0, limit: int = 100):
+    return salary_repository.get_salaries(db, skip=skip, limit=limit)
+
+def get_salary_by_id(db: Session, salary_id: int):
+    return salary_repository.get_salary(db, salary_id=salary_id)
+
+def update_existing_salary(db: Session, salary_id: int, salary_update: salary_schema.SalaryUpdate):
+    return salary_repository.update_salary(db, salary_id=salary_id, salary_update=salary_update)
+
+def remove_salary(db: Session, salary_id: int):
+    return salary_repository.delete_salary(db, salary_id=salary_id)
