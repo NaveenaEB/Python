@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from app.models.salary_model import Salary
+from app.dbmodel.salary_model import Salary
 from app.schemas import salary_schema
 
 def get_salary(db: Session, salary_id: int) -> Optional[Salary]:

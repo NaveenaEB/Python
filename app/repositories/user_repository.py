@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from app.models.user_model import User
+from app.dbmodel.user_model import User
 from app.schemas import user_schema
 
 def get_user(db: Session, user_id: int) -> Optional[User]:

@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from app.core.database import engine, Base
-from app.routers import users, salaries
+from app.api import users, salaries
 # Import models to ensure they are registered with Base.metadata before create_all
-from app.models import user_model, salary_model
+from app.dbmodel import user_model, salary_model
 
 # Create database tables
 # In an enterprise app, you'd use Alembic migrations instead of this
