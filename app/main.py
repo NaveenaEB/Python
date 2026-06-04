@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.core.database import engine, Base
-from app.api import users, salaries
+from app.api import users, salaries, auth
 # Import models to ensure they are registered with Base.metadata before create_all
 from app.dbmodel import user_model, salary_model
 
@@ -17,6 +17,7 @@ app = FastAPI(
 # Include routers from the routers module
 app.include_router(users.router, prefix="/users", tags=["Users"])
 app.include_router(salaries.router, prefix="/salaries", tags=["Salaries"])
+app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 
 @app.get("/")
 def health_check():

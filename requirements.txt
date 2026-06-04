@@ -5,3 +5,5 @@ python-dotenv==1.0.0
 sqlalchemy==2.0.25
 pymysql==1.1.0
 cryptography==42.0.2
+passlib[bcrypt]
+python-jose[cryptography]
