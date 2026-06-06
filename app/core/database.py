@@ -3,10 +3,11 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import urllib.parse
 import os
+from dotenv import load_dotenv
 
-# Replace with your actual MySQL credentials
-password = urllib.parse.quote_plus("Lsp@12345")
-DEFAULT_URL = f"mysql+pymysql://root:{password}@localhost:3306/blogApplication"
+load_dotenv()
+
+DEFAULT_URL = "mysql+pymysql://root:Lsp%4012345@localhost:3306/blogApplication"
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_URL)
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
