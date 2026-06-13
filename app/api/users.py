@@ -17,13 +17,12 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(securit
     )
     
     #  (Strip quotes if present)
-    token = token.strip('"').strip("'")
-
-    # "Bearer <token>" 
-    if not token.startswith("Bearer "):
+    # Clean up the token string. 
+    # We strip whitespace, quotes, and the "Bearer " prefix if it was accidentally double-added.
+    actual_token = token.replace("Bearer ", "").strip().strip('"').strip("'")
+    
+    if not actual_token:
         raise credentials_exception
-        
-    actual_token = token.replace("Bearer ", "")
     payload = security.verify_token(actual_token)
     
     if payload is None:

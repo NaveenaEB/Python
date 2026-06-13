@@ -10,13 +10,15 @@ router = APIRouter()
 
 @router.post("/", response_model=product_schema.Product, status_code=status.HTTP_201_CREATED)
 def create_product(product: product_schema.ProductCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    # Ensure the product is linked to the currently authenticated user
+    product.user_id = current_user.id
     return product_service.create_product(db=db, product=product)
 
-@router.get("/", response_model=List[product_schema.Product])
+@router.get("/", response_model=List[product_schema.Product], dependencies=[Depends(get_current_user)])
 def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return product_service.get_all_products(db, skip=skip, limit=limit)
 
-@router.get("/{product_id}", response_model=product_schema.Product)
+@router.get("/{product_id}", response_model=product_schema.Product, dependencies=[Depends(get_current_user)])
 def read_product(product_id: int, db: Session = Depends(get_db)):
     db_product = product_service.get_product_by_id(db, product_id=product_id)
     if db_product is None:

@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        if (token) {
+        if (token && token !== 'undefined' && token !== 'null') {
             // In a production app, verify the token or decode it (e.g., using jwt-decode) to get user info
             setUser({ id: 1, isAuthenticated: true }); // Restoring user session with default/stored ID
         }
