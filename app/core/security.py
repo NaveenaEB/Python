@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta, timezone
-from typing import Any, Union
+from typing import Any, Union, Optional
 from jose import jwt
 import bcrypt
 import os
 from dotenv import load_dotenv
+from fastapi.security import APIKeyHeader
 
 load_dotenv()
 
@@ -11,6 +12,8 @@ SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-for-jwt-keep-it-safe")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+oauth2_scheme = APIKeyHeader(name="Authorization", description="Please enter 'Bearer' followed by your token")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(

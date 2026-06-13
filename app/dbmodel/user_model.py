@@ -13,3 +13,4 @@ class User(Base):
 
     # Relationship with Salary model using string reference
     salaries = relationship("Salary", back_populates="employee")
+    products = relationship("Product", back_populates="user")

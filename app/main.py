@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from app.core.database import engine, Base
-from app.api import users, salaries, auth
+from app.api import users, salaries, auth, products
 # Import models to ensure they are registered with Base.metadata before create_all
-from app.dbmodel import user_model, salary_model
+from app.dbmodel import user_model, salary_model, product_model
 
 # Create database tables
 # In an enterprise app, you'd use Alembic migrations instead of this
@@ -17,6 +17,7 @@ app = FastAPI(
 # Include routers from the routers module
 app.include_router(users.router, prefix="/users", tags=["Users"])
 app.include_router(salaries.router, prefix="/salaries", tags=["Salaries"])
+app.include_router(products.router, prefix="/products", tags=["Products"])
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 
 @app.get("/")
