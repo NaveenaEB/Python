@@ -1,20 +1,28 @@
-import React, { useEffect, useState, useMemo } from "react";
-import axios from "axios";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import api from "./api";
 import "./App.css";
 import TaglineSection from "./TaglineSection";
+import Login from "./Login";
+import Register from "./Register";
+import SalaryDashboard from "./SalaryDashboard";
+import Navbar from "./Navbar";
+import { AuthProvider, useAuth } from "./AuthContext";
 
-const api = axios.create({
-  baseURL: "http://localhost:8000",
-});
+// Component to protect private routes
+const ProtectedRoute = ({ children }) => {
+  const { user } = useAuth();
+  return user ? children : <Navigate to="/login" />;
+};
 
-function App() {
+function ProductDashboard() {
+  const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState({
-    id: "",
-    name: "",
-    description: "",
+    Name: "",
     price: "",
     quantity: "",
+    user_id: user?.id || 1, 
   });
   const [editId, setEditId] = useState(null);
   const [message, setMessage] = useState("");
@@ -24,132 +32,81 @@ function App() {
   const [sortField, setSortField] = useState("id");
   const [sortDirection, setSortDirection] = useState("asc");
 
-  // Auto-dismiss messages after 5 seconds
   useEffect(() => {
     if (message) {
-      const timer = setTimeout(() => {
-        setMessage("");
-      }, 5000);
+      const timer = setTimeout(() => setMessage(""), 5000);
       return () => clearTimeout(timer);
     }
   }, [message]);
 
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => {
-        setError("");
-      }, 5000);
+      const timer = setTimeout(() => setError(""), 5000);
       return () => clearTimeout(timer);
     }
   }, [error]);
 
-  // Fetch all products
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get("/products/");
       setProducts(res.data);
-      setError("");
     } catch (err) {
       setError("Failed to fetch products");
     }
     setLoading(false);
-  };
-
-  useEffect(() => {
-    // Inline initial fetch to avoid referencing external deps
-    const run = async () => {
-      setLoading(true);
-      try {
-        const res = await api.get("/products/");
-        setProducts(res.data);
-        setError("");
-      } catch (err) {
-        setError("Failed to fetch products");
-      }
-      setLoading(false);
-    };
-    run();
   }, []);
 
-  // Handle sorting
+  useEffect(() => { fetchProducts(); }, [fetchProducts]);
+
   const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
+    const isAsc = sortField === field && sortDirection === "asc";
+    setSortDirection(isAsc ? "desc" : "asc");
+    setSortField(field);
   };
 
-  // Derived list with filter and sorting
   const filteredProducts = useMemo(() => {
-    let filtered = products;
-    
-    // Apply filter
+    let filtered = [...products];
     const q = filter.trim().toLowerCase();
     if (q) {
-      filtered = products.filter((p) =>
-        String(p.id).includes(q) ||
-        p.name?.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q)
-      );
+      filtered = filtered.filter((p) =>
+        String(p.id).includes(q) || p.Name?.toLowerCase().includes(q));
     }
-    
-    // Apply sorting
     return filtered.sort((a, b) => {
       let aVal = a[sortField];
       let bVal = b[sortField];
-      
-      // Handle numeric fields
-      if (sortField === "id" || sortField === "price" || sortField === "quantity") {
-        aVal = Number(aVal);
-        bVal = Number(bVal);
-      } else {
-        // Handle string fields
-        aVal = String(aVal).toLowerCase();
-        bVal = String(bVal).toLowerCase();
-      }
-      
+      if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+      if (typeof bVal === 'string') bVal = bVal.toLowerCase();
       if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
       if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
   }, [products, filter, sortField, sortDirection]);
 
-  // Handle form input
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Reset form
   const resetForm = () => {
-    setForm({ id: "", name: "", description: "", price: "", quantity: "" });
+    setForm({ Name: "", price: "", quantity: "", user_id: user?.id || 1 });
     setEditId(null);
   };
 
-  // Create or update product
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage("");
-    setError("");
     try {
+      const payload = {
+        Name: form.Name,
+        price: parseFloat(form.price),
+        quantity: parseInt(form.quantity),
+        user_id: form.user_id
+      };
       if (editId) {
-        await api.put(`/products/${editId}`, {
-          ...form,
-          id: Number(form.id),
-          price: Number(form.price),
-          quantity: Number(form.quantity),
-        });
+        await api.put(`/products/${editId}`, payload);
         setMessage("Product updated successfully");
       } else {
-        await api.post("/products/", {
-          ...form,
-          id: Number(form.id),
-          price: Number(form.price),
-          quantity: Number(form.quantity),
-        });
+        await api.post("/products/", payload);
         setMessage("Product created successfully");
       }
       resetForm();
@@ -160,14 +117,12 @@ function App() {
     setLoading(false);
   };
 
-  // Edit product
   const handleEdit = (product) => {
     setForm({
-      id: product.id,
-      name: product.name,
-      description: product.description,
+      Name: product.Name,
       price: product.price,
       quantity: product.quantity,
+      user_id: product.user_id
     });
     setEditId(product.id);
     setMessage("");
@@ -196,17 +151,7 @@ function App() {
 
   return (
     <div className="app-bg">
-      <header className="topbar">
-        <div className="brand">
-          <span className="brand-badge">📦</span>
-          <h1>Telusko Trac</h1>
-        </div>
-        <div className="top-actions">
-          <button className="btn btn-light" onClick={fetchProducts} disabled={loading}>
-            Refresh
-          </button>
-        </div>
-      </header>
+      <Navbar />
 
       <div className="container">
         <div className="stats">
@@ -214,7 +159,7 @@ function App() {
           <div className="search">
             <input
               type="text"
-              placeholder="Search by id, name or description..."
+              placeholder="Search by id or name..."
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
             />
@@ -226,27 +171,10 @@ function App() {
             <h2>{editId ? "Edit Product" : "Add Product"}</h2>
             <form onSubmit={handleSubmit} className="product-form">
               <input
-                type="number"
-                name="id"
-                placeholder="ID"
-                value={form.id}
-                onChange={handleChange}
-                required
-                disabled={!!editId}
-              />
-              <input
                 type="text"
-                name="name"
+                name="Name"
                 placeholder="Name"
-                value={form.name}
-                onChange={handleChange}
-                required
-              />
-              <input
-                type="text"
-                name="description"
-                placeholder="Description"
-                value={form.description}
+                value={form.Name}
                 onChange={handleChange}
                 required
               />
@@ -308,18 +236,12 @@ function App() {
                         ID
                       </th>
                       <th 
-                        className={`sortable ${sortField === 'name' ? `sort-${sortDirection}` : ''}`}
-                        onClick={() => handleSort('name')}
+                        className={`sortable ${sortField === 'Name' ? `sort-${sortDirection}` : ''}`}
+                        onClick={() => handleSort('Name')}
                       >
-                        Name
+                        Product Name
                       </th>
-                      <th>Description</th>
-                      <th 
-                        className={`sortable ${sortField === 'price' ? `sort-${sortDirection}` : ''}`}
-                        onClick={() => handleSort('price')}
-                      >
-                        Price
-                      </th>
+                      <th>Price</th>
                       <th 
                         className={`sortable ${sortField === 'quantity' ? `sort-${sortDirection}` : ''}`}
                         onClick={() => handleSort('quantity')}
@@ -333,8 +255,7 @@ function App() {
                     {filteredProducts.map((p) => (
                       <tr key={p.id}>
                         <td>{p.id}</td>
-                        <td className="name-cell">{p.name}</td>
-                        <td className="desc-cell" title={p.description}>{p.description}</td>
+                        <td className="name-cell">{p.Name}</td>
                         <td className="price-cell">${currency(p.price)}</td>
                         <td>
                           <span className="qty-badge">{p.quantity}</span>
@@ -369,4 +290,25 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/salaries" element={
+            <ProtectedRoute>
+              <SalaryDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/" element={
+            <ProtectedRoute>
+              <ProductDashboard />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </AuthProvider>
+    </Router>
+  );
+}
