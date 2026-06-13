@@ -13,6 +13,7 @@ export default function SalaryDashboard() {
     employee_id: user?.id || 1 
   });
   const [editId, setEditId] = useState(null);
+  const [users, setUsers] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -45,7 +46,19 @@ export default function SalaryDashboard() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchSalaries(); }, [fetchSalaries]);
+  const fetchUsers = useCallback(async () => {
+    try {
+      const res = await api.get("/users/");
+      setUsers(res.data);
+    } catch (err) {
+      console.error("Failed to fetch users");
+    }
+  }, []);
+
+  useEffect(() => { 
+    fetchSalaries(); 
+    fetchUsers();
+  }, [fetchSalaries, fetchUsers]);
 
   const handleSort = (field) => {
     const isAsc = sortField === field && sortDirection === "asc";
@@ -139,6 +152,17 @@ export default function SalaryDashboard() {
               <input type="number" name="amount" placeholder="Amount" value={form.amount} onChange={handleChange} required step="0.01" />
               <input type="text" name="month" placeholder="Month" value={form.month} onChange={handleChange} required />
               <input type="number" name="year" placeholder="Year" value={form.year} onChange={handleChange} required />
+              <select 
+                name="employee_id" 
+                value={form.employee_id} 
+                onChange={handleChange} 
+                required
+              >
+                <option value="">Select User</option>
+                {users.map(u => (
+                  <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
+                ))}
+              </select>
               <div className="form-actions">
                 <button className="btn" type="submit" disabled={loading}>
                   {editId ? "Update" : "Add"}

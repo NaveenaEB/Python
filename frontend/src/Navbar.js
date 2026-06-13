@@ -14,6 +14,7 @@ export default function Navbar() {
             <nav className="top-actions">
                 <Link to="/" className="btn btn-light">Products</Link>
                 <Link to="/salaries" className="btn btn-light">Salaries</Link>
+                <Link to="/users" className="btn btn-light">Users</Link>
                 <button className="btn btn-delete" onClick={logout}>
                     Logout
                 </button>

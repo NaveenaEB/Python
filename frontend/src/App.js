@@ -6,6 +6,7 @@ import TaglineSection from "./TaglineSection";
 import Login from "./Login";
 import Register from "./Register";
 import SalaryDashboard from "./SalaryDashboard";
+import UserDashboard from "./UserDashboard";
 import Navbar from "./Navbar";
 import { AuthProvider, useAuth } from "./AuthContext";
 
@@ -300,6 +301,11 @@ export default function App() {
           <Route path="/salaries" element={
             <ProtectedRoute>
               <SalaryDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/users" element={
+            <ProtectedRoute>
+              <UserDashboard />
             </ProtectedRoute>
           } />
           <Route path="/" element={

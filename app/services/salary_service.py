@@ -20,6 +20,14 @@ def get_salary_by_id(db: Session, salary_id: int):
     return salary_repository.get_salary(db, salary_id=salary_id)
 
 def update_existing_salary(db: Session, salary_id: int, salary_update: salary_schema.SalaryUpdate):
+    # Business Logic: Check if employee exists if employee_id is being updated
+    if salary_update.employee_id is not None:
+        user = user_repository.get_user(db, user_id=salary_update.employee_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Employee with ID {salary_update.employee_id} not found"
+            )
     return salary_repository.update_salary(db, salary_id=salary_id, salary_update=salary_update)
 
 def remove_salary(db: Session, salary_id: int):

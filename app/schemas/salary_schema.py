@@ -14,6 +14,7 @@ class SalaryUpdate(BaseModel):
     amount: Optional[float] = None
     month: Optional[str] = None
     year: Optional[int] = None
+    employee_id: Optional[int] = None
 
 class Salary(SalaryBase):
     id: int
