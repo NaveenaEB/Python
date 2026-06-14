@@ -8,13 +8,13 @@ from app.core.database import get_db
 
 router = APIRouter()
 
-@router.post("/", response_model=product_schema.Product, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=product_schema.Product, status_code=status.HTTP_201_CREATED)
 def create_product(product: product_schema.ProductCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     # Ensure the product is linked to the currently authenticated user
     product.user_id = current_user.id
     return product_service.create_product(db=db, product=product)
 
-@router.get("/", response_model=List[product_schema.Product], dependencies=[Depends(get_current_user)])
+@router.get("", response_model=List[product_schema.Product], dependencies=[Depends(get_current_user)])
 def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return product_service.get_all_products(db, skip=skip, limit=limit)
 

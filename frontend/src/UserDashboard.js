@@ -28,7 +28,7 @@ export default function UserDashboard() {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get("/users/");
+      const res = await api.get("/users");
       setUsers(res.data);
     } catch (err) {
       setError("Failed to fetch users");
@@ -77,7 +77,7 @@ export default function UserDashboard() {
         setMessage("User updated successfully");
       } else {
         // UserCreate schema: name, email, password, is_active
-        await api.post("/users/", form);
+        await api.post("/users", form);
         setMessage("User created successfully");
       }
       resetForm();

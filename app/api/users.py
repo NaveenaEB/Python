@@ -6,6 +6,9 @@ from app.repositories import user_repository
 from app.services import user_service
 from app.core import security
 from app.core.database import get_db
+import logging
+
+logger = logging.getLogger("uvicorn.error")
 
 router = APIRouter()
 
@@ -19,9 +22,12 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(securit
     #  (Strip quotes if present)
     # Clean up the token string. 
     # We strip whitespace, quotes, and the "Bearer " prefix if it was accidentally double-added.
+    if token:
+        print(f"DEBUG: get_current_user called with token: {token[:20]}...")
     actual_token = token.replace("Bearer ", "").strip().strip('"').strip("'")
     
     if not actual_token:
+        print("DEBUG: Token is empty after cleanup")
         raise credentials_exception
     payload = security.verify_token(actual_token)
     
@@ -35,13 +41,17 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(securit
         raise credentials_exception
     return user
 
-@router.post("/", response_model=user_schema.User, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=user_schema.User, status_code=status.HTTP_201_CREATED)
 def create_user(user: user_schema.UserCreate, db: Session = Depends(get_db)):
     return user_service.register_user(db=db, user=user)
 
-@router.get("/", response_model=List[user_schema.User], dependencies=[Depends(get_current_user)])
+# @router.get("", response_model=List[user_schema.User], dependencies=[Depends(get_current_user)])
+@router.get("", response_model=List[user_schema.User])
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return user_service.get_all_users(db, skip=skip, limit=limit)
+    logger.info(f"DEBUG: Fetching users with skip={skip} and limit={limit}")
+    users = user_service.get_all_users(db, skip=skip, limit=limit)
+    logger.info(f"DEBUG: Fetched {len(users)} users from database.")
+    return users
 
 @router.get("/{user_id}", response_model=user_schema.User, dependencies=[Depends(get_current_user)])
 def read_user(user_id: int, db: Session = Depends(get_db)):

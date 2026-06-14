@@ -9,11 +9,11 @@ from app.core.database import get_db
 
 router = APIRouter()
 
-@router.post("/", response_model=salary_schema.Salary, status_code=status.HTTP_201_CREATED, dependencies=[Depends(get_current_user)])
+@router.post("", response_model=salary_schema.Salary, status_code=status.HTTP_201_CREATED, dependencies=[Depends(get_current_user)])
 def create_salary(salary: salary_schema.SalaryCreate, db: Session = Depends(get_db)):
     return salary_service.create_employee_salary(db=db, salary=salary)
 
-@router.get("/", response_model=List[salary_schema.Salary], dependencies=[Depends(get_current_user)])
+@router.get("", response_model=List[salary_schema.Salary], dependencies=[Depends(get_current_user)])
 def read_salaries(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return salary_service.get_all_salaries(db, skip=skip, limit=limit)
 

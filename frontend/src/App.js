@@ -50,7 +50,7 @@ function ProductDashboard() {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get("/products/");
+      const res = await api.get("/products");
       setProducts(res.data);
     } catch (err) {
       setError("Failed to fetch products");
@@ -107,7 +107,7 @@ function ProductDashboard() {
         await api.put(`/products/${editId}`, payload);
         setMessage("Product updated successfully");
       } else {
-        await api.post("/products/", payload);
+        await api.post("/products", payload);
         setMessage("Product created successfully");
       }
       resetForm();

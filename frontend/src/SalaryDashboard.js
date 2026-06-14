@@ -38,7 +38,7 @@ export default function SalaryDashboard() {
   const fetchSalaries = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get("/salaries/");
+      const res = await api.get("/salaries");
       setSalaries(res.data);
     } catch (err) {
       setError("Failed to fetch salaries");
@@ -48,7 +48,7 @@ export default function SalaryDashboard() {
 
   const fetchUsers = useCallback(async () => {
     try {
-      const res = await api.get("/users/");
+      const res = await api.get("/users");
       setUsers(res.data);
     } catch (err) {
       console.error("Failed to fetch users");
@@ -106,7 +106,7 @@ export default function SalaryDashboard() {
         await api.put(`/salaries/${editId}`, payload);
         setMessage("Record updated");
       } else {
-        await api.post("/salaries/", payload);
+        await api.post("/salaries", payload);
         setMessage("Record created");
       }
       resetForm();
