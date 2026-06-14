@@ -45,12 +45,9 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(securit
 def create_user(user: user_schema.UserCreate, db: Session = Depends(get_db)):
     return user_service.register_user(db=db, user=user)
 
-# @router.get("", response_model=List[user_schema.User], dependencies=[Depends(get_current_user)])
-@router.get("", response_model=List[user_schema.User])
+@router.get("", response_model=List[user_schema.User], dependencies=[Depends(get_current_user)])
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    logger.info(f"DEBUG: Fetching users with skip={skip} and limit={limit}")
     users = user_service.get_all_users(db, skip=skip, limit=limit)
-    logger.info(f"DEBUG: Fetched {len(users)} users from database.")
     return users
 
 @router.get("/{user_id}", response_model=user_schema.User, dependencies=[Depends(get_current_user)])

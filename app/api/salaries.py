@@ -15,8 +15,8 @@ def create_salary(salary: salary_schema.SalaryCreate, db: Session = Depends(get_
 
 @router.get("", response_model=List[salary_schema.Salary], dependencies=[Depends(get_current_user)])
 def read_salaries(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return salary_service.get_all_salaries(db, skip=skip, limit=limit)
-
+    salary = salary_service.get_all_salaries(db, skip=skip, limit=limit)
+    return salary
 @router.get("/{salary_id}", response_model=salary_schema.Salary, dependencies=[Depends(get_current_user)])
 def read_salary(salary_id: int, db: Session = Depends(get_db)):
     db_salary = salary_service.get_salary_by_id(db, salary_id=salary_id)
