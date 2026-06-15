@@ -5,7 +5,7 @@ class SalaryBase(BaseModel):
     amount: float
     month: str
     year: int
-    employee_id: int
+    employee_id: Optional[int] = None
 
 class SalaryCreate(SalaryBase):
     pass

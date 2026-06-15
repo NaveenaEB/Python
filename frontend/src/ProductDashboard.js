@@ -13,7 +13,7 @@ const ProductDashboard = () => {
 
   // Form state for Add/Edit
   const [form, setForm] = useState({
-    name: "",
+    Name: "",
     price: "",
     quantity: "",
     status: "ordered",
@@ -50,7 +50,7 @@ const ProductDashboard = () => {
   };
 
   const resetForm = () => {
-    setForm({ name: "", price: "", quantity: "", status: "ordered", description: "" });
+    setForm({ Name: "", price: "", quantity: "", status: "ordered", description: "" });
     setEditId(null);
   };
 
@@ -76,14 +76,21 @@ const ProductDashboard = () => {
       resetForm();
       handleSearch();
     } catch (err) {
-      setError(err.response?.data?.detail || "Operation failed");
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        // If FastAPI returns a list of validation errors, join their messages
+        setError(detail.map(e => `${e.loc.join('.')}: ${e.msg}`).join(", "));
+      } else {
+        // Fallback to the detail string or a generic message
+        setError(typeof detail === 'string' ? detail : "Operation failed");
+      }
     }
     setIsLoading(false);
   };
 
   const handleEdit = (product) => {
     setForm({
-      name: product.name,
+      Name: product.Name || product.name,
       price: product.price,
       quantity: product.quantity,
       status: product.status || "ordered",
@@ -131,7 +138,7 @@ const ProductDashboard = () => {
           <div className="card form-card">
             <h2>{editId ? "Edit Product" : "Add Product"}</h2>
             <form onSubmit={handleSubmit} className="product-form">
-              <input type="text" name="name" placeholder="Name" value={form.name} onChange={handleChange} required />
+              <input type="text" name="Name" placeholder="Name" value={form.Name} onChange={handleChange} required />
               <input type="number" name="price" placeholder="Price" value={form.price} onChange={handleChange} required step="0.01" />
               <input type="number" name="quantity" placeholder="Quantity" value={form.quantity} onChange={handleChange} required />
               <select name="status" value={form.status} onChange={handleChange}>
@@ -169,7 +176,7 @@ const ProductDashboard = () => {
                     {products.map(p => (
                       <tr key={p.id}>
                         <td>{p.id}</td>
-                        <td className="name-cell">{p.name}</td>
+                        <td className="name-cell">{p.Name || p.name}</td>
                         <td><span className="qty-badge" style={{ textTransform: 'uppercase' }}>{p.status}</span></td>
                         <td className="price-cell">${p.price.toFixed(2)}</td>
                         <td>
