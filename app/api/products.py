@@ -1,12 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
+from pydantic import BaseModel
 from app.schemas import product_schema
 from app.services import product_service
 from app.api.users import get_current_user
 from app.core.database import get_db
 
 router = APIRouter()
+
+class ProductFilter(BaseModel):
+    search_text: Optional[str] = None
+    status: Optional[str] = None
 
 @router.post("", response_model=product_schema.Product, status_code=status.HTTP_201_CREATED)
 def create_product(product: product_schema.ProductCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
@@ -17,6 +22,11 @@ def create_product(product: product_schema.ProductCreate, db: Session = Depends(
 @router.get("", response_model=List[product_schema.Product], dependencies=[Depends(get_current_user)])
 def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return product_service.get_all_products(db, skip=skip, limit=limit)
+
+@router.post("/filter", response_model=List[product_schema.Product])
+def filter_products(filters: ProductFilter, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    # This endpoint allows filtering products by search text and status via POST body
+    return product_service.filter_products(db, filters=filters)
 
 @router.get("/{product_id}", response_model=product_schema.Product, dependencies=[Depends(get_current_user)])
 def read_product(product_id: int, db: Session = Depends(get_db)):

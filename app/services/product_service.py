@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.repositories import product_repository, salary_repository, user_repository
+from app.dbmodel.product_model import Product
 from app.schemas import product_schema
 
 def create_product(db: Session, product: product_schema.ProductCreate):
@@ -24,3 +25,16 @@ def update_existing_product(db: Session, product_id: int, product_update: produc
 
 def remove_product(db: Session, product_id: int):
     return product_repository.delete_product(db, product_id=product_id)
+
+def filter_products(db: Session, filters):
+    query = db.query(Product)
+    
+    if filters.search_text:
+        # Search by text in name or description (case-insensitive)
+        search = f"%{filters.search_text}%"
+        query = query.filter(Product.name.ilike(search) | Product.description.ilike(search))
+        
+    if filters.status:
+        query = query.filter(Product.status == filters.status)
+        
+    return query.all()
