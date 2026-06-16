@@ -49,7 +49,7 @@ export default function SalaryDashboard() {
   const fetchUsers = useCallback(async () => {
     try {
       const res = await api.get("/users");
-      setUsers(res.data);
+      setUsers(res.data.data || []);
     } catch (err) {
       console.error("Failed to fetch users");
     }
@@ -112,7 +112,14 @@ export default function SalaryDashboard() {
       resetForm();
       fetchSalaries();
     } catch (err) {
-      setError("Operation failed");
+      const errors = err.response?.data?.errors;
+      if (Array.isArray(errors)) {
+        // If FastAPI returns a list of validation errors, join their messages
+        setError(errors.map(e => `${e.loc.join('.')}: ${e.msg}`).join(", "));
+      } else {
+        // Fallback to the error message or a generic message
+        setError(err.response?.data?.message || "Operation failed");
+      }
     }
     setLoading(false);
   };
@@ -121,9 +128,10 @@ export default function SalaryDashboard() {
     if (!window.confirm("Delete this record?")) return;
     try {
       await api.delete(`/salaries/${id}`);
+      setMessage("Record deleted");
       fetchSalaries();
     } catch (err) {
-      setError("Delete failed");
+      setError(err.response?.data?.message || "Delete failed");
     }
   };
 

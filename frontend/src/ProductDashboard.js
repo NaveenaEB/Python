@@ -140,7 +140,7 @@ const ProductDashboard = () => {
             <form onSubmit={handleSubmit} className="product-form">
               <input type="text" name="Name" placeholder="Name" value={form.Name} onChange={handleChange} required />
               <input type="number" name="price" placeholder="Price" value={form.price} onChange={handleChange} required step="0.01" />
-              <input type="number" name="quantity" placeholder="Quantity" value={form.quantity} onChange={handleChange} required />
+              <input type="number" name="quantity" placeholder="Quantity" value={form.quantity} onChange={handleChange}  />
               <select name="status" value={form.status} onChange={handleChange}>
                 <option value="ordered">Ordered</option>
                 <option value="shipped">Shipped</option>
