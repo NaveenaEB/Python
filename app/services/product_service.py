@@ -3,15 +3,13 @@ from fastapi import HTTPException, status
 from app.repositories import product_repository, salary_repository, user_repository
 from app.dbmodel.product_model import Product
 from app.schemas import product_schema
+from app.exceptions.custom_exceptions import EntityNotFoundException
 
 def create_product(db: Session, product: product_schema.ProductCreate):
     # Business Logic: Check if user exists before creating product
     user = user_repository.get_user(db, user_id=product.user_id)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with ID {product.user_id} not found"
-        )
+        raise EntityNotFoundException(entity_name="User", entity_id=product.user_id)
     return product_repository.create_product(db, product)
 
 def get_all_products(db: Session, skip: int = 0, limit: int = 100):

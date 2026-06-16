@@ -39,7 +39,7 @@ export default function SalaryDashboard() {
     setLoading(true);
     try {
       const res = await api.get("/salaries");
-      setSalaries(res.data);
+      setSalaries(res.data.data || []); // Access nested data
     } catch (err) {
       setError("Failed to fetch salaries");
     }
@@ -77,7 +77,7 @@ export default function SalaryDashboard() {
       let aVal = a[sortField];
       let bVal = b[sortField];
       if (typeof aVal === 'string') aVal = aVal.toLowerCase();
-      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+      if (typeof bVal === 'string') bVal = bVal.toLowerCase(); // Added missing toLowerCase for bVal
       if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });

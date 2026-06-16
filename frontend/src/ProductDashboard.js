@@ -31,7 +31,7 @@ const ProductDashboard = () => {
         search_text: searchText.trim() || null,
         status: status || null
       });
-      setProducts(response.data);
+      setProducts(response.data.data || []); // Ensure it's an array even if data is null
     } catch (error) {
       console.error("Failed to fetch filtered products:", error);
       setError("Failed to fetch products");
@@ -76,13 +76,13 @@ const ProductDashboard = () => {
       resetForm();
       handleSearch();
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      if (Array.isArray(detail)) {
+      const errors = err.response?.data?.errors;
+      if (Array.isArray(errors)) {
         // If FastAPI returns a list of validation errors, join their messages
-        setError(detail.map(e => `${e.loc.join('.')}: ${e.msg}`).join(", "));
+        setError(errors.map(e => `${e.loc.join('.')}: ${e.msg}`).join(", "));
       } else {
-        // Fallback to the detail string or a generic message
-        setError(typeof detail === 'string' ? detail : "Operation failed");
+        // Fallback to the error message or a generic message
+        setError(err.response?.data?.message || "Operation failed");
       }
     }
     setIsLoading(false);

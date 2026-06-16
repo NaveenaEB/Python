@@ -29,7 +29,7 @@ export default function UserDashboard() {
     setLoading(true);
     try {
       const res = await api.get("/users");
-      setUsers(res.data);
+      setUsers(res.data.data || []); // Access nested data
     } catch (err) {
       setError("Failed to fetch users");
     }
@@ -83,7 +83,14 @@ export default function UserDashboard() {
       resetForm();
       fetchUsers();
     } catch (err) {
-      setError(err.response?.data?.detail || "Operation failed");
+      const errors = err.response?.data?.errors;
+      if (Array.isArray(errors)) {
+        // If FastAPI returns a list of validation errors, join their messages
+        setError(errors.map(e => `${e.loc.join('.')}: ${e.msg}`).join(", "));
+      } else {
+        // Fallback to the error message or a generic message
+        setError(err.response?.data?.message || "Operation failed");
+      }
     }
     setLoading(false);
   };

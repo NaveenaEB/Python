@@ -53,12 +53,23 @@ api.interceptors.response.use(
             isRefreshing = true;
 
             return new Promise((resolve, reject) => {
-                const refreshToken = localStorage.getItem('refresh_token');
+                const rawRefreshToken = localStorage.getItem('refresh_token');
+                
+                // If no refresh token exists, or it's literally the string "undefined", abort
+                if (!rawRefreshToken || rawRefreshToken === "undefined") {
+                    isRefreshing = false;
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('refresh_token');
+                    window.location.href = '/login';
+                    return reject(error);
+                }
+
+                const cleanRefreshToken = rawRefreshToken.replace(/['"]+/g, '');
                 
                 // Send the refresh token in the body as expected by the backend
-                api.post('/auth/refresh', { refresh_token: refreshToken })
+                api.post('/auth/refresh', { refresh_token: cleanRefreshToken })
                     .then(({ data }) => {
-                        const newToken = data.access_token;
+                        const newToken = data.data.access_token;
                         localStorage.setItem('token', newToken);
                         
                         // Update the current and future request headers

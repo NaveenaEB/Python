@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.schemas import user_schema
+from app.schemas.api_response import ApiResponse
 from app.repositories import user_repository
 from app.services import user_service
+from app.exceptions.custom_exceptions import EntityNotFoundException
 from app.core import security
 from app.core.database import get_db
 import logging
@@ -41,32 +43,33 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(securit
         raise credentials_exception
     return user
 
-@router.post("", response_model=user_schema.User, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=ApiResponse[user_schema.User], status_code=status.HTTP_201_CREATED)
 def create_user(user: user_schema.UserCreate, db: Session = Depends(get_db)):
-    return user_service.register_user(db=db, user=user)
+    data = user_service.register_user(db=db, user=user)
+    return ApiResponse(data=data, isSuccess=True, message="User registered successfully.")
 
-@router.get("", response_model=List[user_schema.User], dependencies=[Depends(get_current_user)])
+@router.get("", response_model=ApiResponse[List[user_schema.User]], dependencies=[Depends(get_current_user)])
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = user_service.get_all_users(db, skip=skip, limit=limit)
-    return users
+    return ApiResponse(data=users, isSuccess=True, message="Users retrieved successfully.")
 
-@router.get("/{user_id}", response_model=user_schema.User, dependencies=[Depends(get_current_user)])
+@router.get("/{user_id}", response_model=ApiResponse[user_schema.User], dependencies=[Depends(get_current_user)])
 def read_user(user_id: int, db: Session = Depends(get_db)):
     db_user = user_service.get_profile(db, user_id=user_id)
     if db_user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    return db_user
+        raise EntityNotFoundException(entity_name="User", entity_id=user_id)
+    return ApiResponse(data=db_user, isSuccess=True, message="User profile retrieved.")
 
-@router.put("/{user_id}", response_model=user_schema.User, dependencies=[Depends(get_current_user)])
+@router.put("/{user_id}", response_model=ApiResponse[user_schema.User], dependencies=[Depends(get_current_user)])
 def update_user(user_id: int, user: user_schema.UserUpdate, db: Session = Depends(get_db)):
     db_user = user_service.update_existing_user(db, user_id=user_id, user_update=user)
     if db_user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    return db_user
+        raise EntityNotFoundException(entity_name="User", entity_id=user_id)
+    return ApiResponse(data=db_user, isSuccess=True, message="User updated successfully.")
 
 @router.delete("/{user_id}", dependencies=[Depends(get_current_user)])
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     success = user_service.remove_user(db, user_id=user_id)
     if not success:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    return {"message": "User deleted successfully"}
+        raise EntityNotFoundException(entity_name="User", entity_id=user_id)
+    return ApiResponse(data=None, isSuccess=True, message="User deleted successfully.")

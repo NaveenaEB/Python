@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from app.core.database import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import users, salaries, auth, products
+from app.exceptions.handlers import register_exception_handlers
 # Import models to ensure they are registered with Base.metadata before create_all
 from app.dbmodel import user_model, salary_model, product_model
 
@@ -34,6 +35,9 @@ app.include_router(users.router, prefix="/users", tags=["Users"])
 app.include_router(salaries.router, prefix="/salaries", tags=["Salaries"])
 app.include_router(products.router, prefix="/products", tags=["Products"])
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+
+# Register centralized exception handlers
+register_exception_handlers(app)
 
 @app.get("/")
 def health_check():
