@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.openapi.utils import get_openapi
 from app.core.database import engine, Base
 from app.features.users import router as users
 from app.features.salaries import router as salaries
@@ -20,6 +21,28 @@ app = FastAPI(
     description="A modular FastAPI application",
     version="1.0.0"
 )
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+
+    for path in openapi_schema.get("paths", {}).values():
+        for operation in path.values():
+            operation.get("responses", {}).pop("422", None)
+
+    openapi_schema.get("components", {}).get("schemas", {}).pop("HTTPValidationError", None)
+    openapi_schema.get("components", {}).get("schemas", {}).pop("ValidationError", None)
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 # Register Custom Middleware
 app.add_middleware(CustomCORSMiddleware)
