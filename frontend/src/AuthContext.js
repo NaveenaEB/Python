@@ -10,10 +10,17 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token && token !== 'undefined' && token !== 'null') {
-            // In a real app, you'd decode the JWT to get user details like ID and email
-            // For now, we'll assume a valid token means a logged-in user
-            // You might want to make an API call to /users/me to get actual user data
-            setUser({ id: 1, isAuthenticated: true, email: 'user@example.com' }); 
+            api.get('/users/me')
+                .then((response) => {
+                    setUser({ ...response.data.data, isAuthenticated: true });
+                })
+                .catch(() => {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('refresh_token');
+                    setUser(null);
+                })
+                .finally(() => setLoading(false));
+            return;
         }
         setLoading(false);
     }, []);
@@ -28,8 +35,9 @@ export const AuthProvider = ({ children }) => {
         // Access nested data because of the ApiResponse wrapper
         localStorage.setItem('token', response.data.data.access_token);
         localStorage.setItem('refresh_token', response.data.data.refresh_token);
-        // In a real app, you'd decode the JWT or fetch user details to set the user state
-        setUser({ id: 1, isAuthenticated: true, email: email }); 
+
+        const currentUserResponse = await api.get('/users/me');
+        setUser({ ...currentUserResponse.data.data, isAuthenticated: true });
     };
 
     const logout = () => {

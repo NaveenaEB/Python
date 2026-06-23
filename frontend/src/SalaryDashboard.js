@@ -10,7 +10,7 @@ export default function SalaryDashboard() {
     amount: "", 
     month: "", 
     year: "", 
-    employee_id: user?.id || 1 
+    employee_id: user?.id || "" 
   });
   const [editId, setEditId] = useState(null);
   const [users, setUsers] = useState([]);
@@ -60,6 +60,12 @@ export default function SalaryDashboard() {
     fetchUsers();
   }, [fetchSalaries, fetchUsers]);
 
+  useEffect(() => {
+    if (user?.id && !form.employee_id) {
+      setForm((current) => ({ ...current, employee_id: user.id }));
+    }
+  }, [user, form.employee_id]);
+
   const handleSort = (field) => {
     const isAsc = sortField === field && sortDirection === "asc";
     setSortDirection(isAsc ? "desc" : "asc");
@@ -88,7 +94,7 @@ export default function SalaryDashboard() {
   };
 
   const resetForm = () => {
-    setForm({ amount: "", month: "", year: "", employee_id: user?.id || 1 });
+    setForm({ amount: "", month: "", year: "", employee_id: user?.id || "" });
     setEditId(null);
   };
 
@@ -96,11 +102,28 @@ export default function SalaryDashboard() {
     e.preventDefault();
     setLoading(true);
     try {
+      const amount = Number(form.amount);
+      const year = Number.parseInt(form.year, 10);
+      const employeeId = Number.parseInt(form.employee_id, 10);
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        throw new Error("Amount must be greater than 0");
+      }
+      if (!form.month.trim()) {
+        throw new Error("Month is required");
+      }
+      if (!Number.isInteger(year) || year < 1900) {
+        throw new Error("Enter a valid year");
+      }
+      if (!Number.isInteger(employeeId) || employeeId <= 0) {
+        throw new Error("Select a user");
+      }
+
       const payload = {
-        amount: parseFloat(form.amount || 0),
-        month: form.month,
-        year: parseInt(form.year || new Date().getFullYear()),
-        employee_id: parseInt(form.employee_id || user?.id || 1)
+        amount,
+        month: form.month.trim(),
+        year,
+        employee_id: employeeId
       };
       if (editId) {
         await api.put(`/salaries/${editId}`, payload);
@@ -116,6 +139,8 @@ export default function SalaryDashboard() {
       if (Array.isArray(errors)) {
         // If FastAPI returns a list of validation errors, join their messages
         setError(errors.map(e => `${e.loc.join('.')}: ${e.msg}`).join(", "));
+      } else if (err.message) {
+        setError(err.message);
       } else {
         // Fallback to the error message or a generic message
         setError(err.response?.data?.message || "Operation failed");
