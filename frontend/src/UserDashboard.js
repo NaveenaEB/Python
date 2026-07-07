@@ -4,6 +4,7 @@ import Navbar from "./Navbar";
 
 export default function UserDashboard() {
   const [users, setUsers] = useState([]);
+  console.log("Users state:", users); // Debugging line
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -29,7 +30,7 @@ export default function UserDashboard() {
     setLoading(true);
     try {
       const res = await api.get("/users");
-      setUsers(res.data.data || []); // Access nested data
+      setUsers(res?.data || []); // Access nested data
     } catch (err) {
       setError("Failed to fetch users");
     }

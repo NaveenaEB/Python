@@ -4,6 +4,15 @@ const api = axios.create({
     baseURL: 'http://localhost:8000',
 });
 
+const normalizeStoredToken = (rawValue) => {
+    if (!rawValue) return null;
+    const cleaned = rawValue.toString().trim().replace(/['"]+/g, '');
+    return cleaned === 'undefined' || cleaned === 'null' || cleaned === '' ? null : cleaned;
+};
+
+const getStoredToken = () => normalizeStoredToken(localStorage.getItem('token'));
+const getStoredRefreshToken = () => normalizeStoredToken(localStorage.getItem('refresh_token'));
+
 // Variables to handle token refreshing logic
 let isRefreshing = false;
 let failedQueue = [];
@@ -20,11 +29,11 @@ const processQueue = (error, token = null) => {
 };
 
 api.interceptors.request.use((config) => {
-    let token = localStorage.getItem('token');
+    const token = getStoredToken();
     if (token) {
-        // Clean the token: remove quotes and any accidental "Bearer " prefix stored in it
-        const cleanToken = token.replace(/['"]+/g, '').replace(/^Bearer\s+/i, '');
-        config.headers.Authorization = `Bearer ${cleanToken}`;
+        config.headers.Authorization = `Bearer ${token}`;
+    } else {
+        delete config.headers.Authorization;
     }
     return config;
 });
@@ -53,10 +62,9 @@ api.interceptors.response.use(
             isRefreshing = true;
 
             return new Promise((resolve, reject) => {
-                const rawRefreshToken = localStorage.getItem('refresh_token');
+                const refreshToken = getStoredRefreshToken();
                 
-                // If no refresh token exists, or it's literally the string "undefined", abort
-                if (!rawRefreshToken || rawRefreshToken === "undefined") {
+                if (!refreshToken) {
                     isRefreshing = false;
                     localStorage.removeItem('token');
                     localStorage.removeItem('refresh_token');
@@ -64,10 +72,8 @@ api.interceptors.response.use(
                     return reject(error);
                 }
 
-                const cleanRefreshToken = rawRefreshToken.replace(/['"]+/g, '');
-                
                 // Send the refresh token in the body as expected by the backend
-                api.post('/auth/refresh', { refresh_token: cleanRefreshToken })
+                api.post('/auth/refresh', { refresh_token: refreshToken })
                     .then(({ data }) => {
                         const newToken = data.data.access_token;
                         localStorage.setItem('token', newToken);
