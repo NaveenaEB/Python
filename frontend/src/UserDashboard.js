@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import api from "./api";
 import Navbar from "./Navbar";
 
@@ -26,20 +26,20 @@ export default function UserDashboard() {
     }
   }, [error]);
 
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers = async () => {
     setLoading(true);
     try {
       const res = await api.get("/users");
-      setUsers(res?.data || []); // Access nested data
+      setUsers(res?.data?.data || []); // Access nested data
     } catch (err) {
       setError("Failed to fetch users");
     }
     setLoading(false);
-  }, []);
+  };
 
   useEffect(() => {
     fetchUsers();
-  }, [fetchUsers]);
+  }, []);
 
   const filteredUsers = useMemo(() => {
     const q = filter.trim().toLowerCase();
